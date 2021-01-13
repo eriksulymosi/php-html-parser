@@ -192,7 +192,7 @@ class Parser implements ParserInterface
                 ->setClosing('-->')
                 ->selfClosing();
         } else {
-            $tag = \strtolower($content->copyByToken(StringToken::SLASH(), true));
+            $tag = $content->copyByToken(StringToken::SLASH(), true);
             if (\trim($tag) == '') {
                 // no tag found, invalid < found
                 return TagDTO::makeFromPrimitives();
@@ -260,12 +260,11 @@ class Parser implements ParserInterface
         $content->fastForward(1);
 
         // check if this closing tag counts
-        $tag = \strtolower($tag);
         if (\in_array($tag, $options->getSelfClosing(), true)) {
             return TagDTO::makeFromPrimitives(true);
         }
 
-        return TagDTO::makeFromPrimitives(true, true, null, \strtolower($tag));
+        return TagDTO::makeFromPrimitives(true, true, null, $tag);
     }
 
     /**
