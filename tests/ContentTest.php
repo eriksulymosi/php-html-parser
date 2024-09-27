@@ -1,97 +1,83 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Content;
 use PHPHtmlParser\Enum\StringToken;
-use PHPUnit\Framework\TestCase;
 
-class ContentTest extends TestCase
-{
-    public function testChar()
-    {
-        $content = new Content('abcde');
-        $this->assertEquals('a', $content->char());
-    }
+test('char', function (): void {
+    $content = new Content('abcde');
+    expect($content->char())->toEqual('a');
+});
 
-    public function testCharSelection()
-    {
-        $content = new Content('abcde');
-        $this->assertEquals('d', $content->char(3));
-    }
+test('char selection', function (): void {
+    $content = new Content('abcde');
+    expect($content->char(3))->toEqual('d');
+});
 
-    public function testFastForward()
-    {
-        $content = new Content('abcde');
-        $content->fastForward(2);
-        $this->assertEquals('c', $content->char());
-    }
+test('fast forward', function (): void {
+    $content = new Content('abcde');
+    $content->fastForward(2);
 
-    public function testRewind()
-    {
-        $content = new Content('abcde');
-        $content->fastForward(2)
-                ->rewind(1);
-        $this->assertEquals('b', $content->char());
-    }
+    expect($content->char())->toEqual('c');
+});
 
-    public function testRewindNegative()
-    {
-        $content = new Content('abcde');
-        $content->fastForward(2)
-                ->rewind(100);
-        $this->assertEquals('a', $content->char());
-    }
+test('rewind', function (): void {
+    $content = new Content('abcde');
+    $content->fastForward(2)
+            ->rewind(1);
+    expect($content->char())->toEqual('b');
+});
 
-    public function testCopyUntil()
-    {
-        $content = new Content('abcdeedcba');
-        $this->assertEquals('abcde', $content->copyUntil('ed'));
-    }
+test('rewind negative', function (): void {
+    $content = new Content('abcde');
+    $content->fastForward(2)
+            ->rewind(100);
+    expect($content->char())->toEqual('a');
+});
 
-    public function testCopyUntilChar()
-    {
-        $content = new Content('abcdeedcba');
-        $this->assertEquals('ab', $content->copyUntil('edc', true));
-    }
+test('copy until', function (): void {
+    $content = new Content('abcdeedcba');
+    expect($content->copyUntil('ed'))->toEqual('abcde');
+});
 
-    public function testCopyUntilEscape()
-    {
-        $content = new Content('foo\"bar"bax');
-        $this->assertEquals('foo\"bar', $content->copyUntil('"', false, true));
-    }
+test('copy until char', function (): void {
+    $content = new Content('abcdeedcba');
+    expect($content->copyUntil('edc', true))->toEqual('ab');
+});
 
-    public function testCopyUntilNotFound()
-    {
-        $content = new Content('foo\"bar"bax');
-        $this->assertEquals('foo\"bar"bax', $content->copyUntil('baz'));
-    }
+test('copy until escape', function (): void {
+    $content = new Content('foo\"bar"bax');
+    expect($content->copyUntil('"', false, true))->toEqual('foo\"bar');
+});
 
-    public function testCopyByToken()
-    {
-        $content = new Content('<a href="google.com">');
-        $content->fastForward(3);
-        $this->assertEquals('href="google.com"', $content->copyByToken(StringToken::ATTR(), true));
-    }
+test('copy until not found', function (): void {
+    $content = new Content('foo\"bar"bax');
+    expect($content->copyUntil('baz'))->toEqual('foo\"bar"bax');
+});
 
-    public function testSkip()
-    {
-        $content = new Content('abcdefghijkl');
-        $content->skip('abcd');
-        $this->assertEquals('e', $content->char());
-    }
+test('copy by token', function (): void {
+    $content = new Content('<a href="google.com">');
+    $content->fastForward(3);
 
-    public function testSkipCopy()
-    {
-        $content = new Content('abcdefghijkl');
-        $this->assertEquals('abcd', $content->skip('abcd', true));
-    }
+    expect($content->copyByToken(StringToken::ATTR, true))->toEqual('href="google.com"');
+});
 
-    public function testSkipByToken()
-    {
-        $content = new Content(' b c');
-        $content->fastForward(1);
-        $content->skipByToken(StringToken::BLANK());
-        $this->assertEquals('b', $content->char());
-    }
-}
+test('skip', function (): void {
+    $content = new Content('abcdefghijkl');
+    $content->skip('abcd');
+
+    expect($content->char())->toEqual('e');
+});
+
+test('skip copy', function (): void {
+    $content = new Content('abcdefghijkl');
+    expect($content->skip('abcd', true))->toEqual('abcd');
+});
+
+test('skip by token', function (): void {
+    $content = new Content(' b c');
+    $content->fastForward(1);
+    $content->skipByToken(StringToken::BLANK);
+
+    expect($content->char())->toEqual('b');
+});

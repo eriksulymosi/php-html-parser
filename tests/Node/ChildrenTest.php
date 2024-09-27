@@ -1,122 +1,98 @@
 <?php
 
-declare(strict_types=1);
 require_once 'tests/data/MockNode.php';
 
-use PHPHtmlParser\Dom\Node\MockNode as Node;
-use PHPUnit\Framework\TestCase;
+use PHPHtmlParser\Dom\Node\MockNode;
+use PHPHtmlParser\Exceptions\ChildNotFoundException;
+use PHPHtmlParser\Exceptions\ParentNotFoundException;
 
-class NodeChildTest extends TestCase
-{
-    public function testGetParent()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child->setParent($parent);
-        $this->assertEquals($parent->id(), $child->getParent()->id());
-    }
+test('get parent', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child->setParent($parent);
 
-    public function testSetParentTwice()
-    {
-        $parent = new Node();
-        $parent2 = new Node();
-        $child = new Node();
-        $child->setParent($parent);
-        $child->setParent($parent2);
-        $this->assertEquals($parent2->id(), $child->getParent()->id());
-    }
+    expect($child->getParent()->id())->toEqual($parent->id());
+});
 
-    public function testNextSibling()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child->setParent($parent);
-        $child2->setParent($parent);
-        $this->assertEquals($child2->id(), $child->nextSibling()->id());
-    }
+test('set parent twice', function (): void {
+    $parent = new MockNode();
+    $parent2 = new MockNode();
+    $child = new MockNode();
+    $child->setParent($parent);
+    $child->setParent($parent2);
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\ChildNotFoundException
-     */
-    public function testNextSiblingNotFound()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child->setParent($parent);
-        $child->nextSibling();
-    }
+    expect($child->getParent()->id())->toEqual($parent2->id());
+});
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\ParentNotFoundException
-     */
-    public function testNextSiblingNoParent()
-    {
-        $child = new Node();
-        $child->nextSibling();
-    }
+test('next sibling', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child->setParent($parent);
+    $child2->setParent($parent);
+    expect($child->nextSibling()->id())->toEqual($child2->id());
+});
 
-    public function testPreviousSibling()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child->setParent($parent);
-        $child2->setParent($parent);
-        $this->assertEquals($child->id(), $child2->previousSibling()->id());
-    }
+test('next sibling not found', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child->setParent($parent);
+    $child->nextSibling();
+})->throws(ChildNotFoundException::class);
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\ChildNotFoundException
-     */
-    public function testPreviousSiblingNotFound()
-    {
-        $parent = new Node();
-        $node = new Node();
-        $node->setParent($parent);
-        $node->previousSibling();
-    }
+test('next sibling no parent', function (): void {
+    $child = new MockNode();
+    $child->nextSibling();
+})->throws(ParentNotFoundException::class);
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\ParentNotFoundException
-     */
-    public function testPreviousSiblingNoParent()
-    {
-        $child = new Node();
-        $child->previousSibling();
-    }
+test('previous sibling', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child->setParent($parent);
+    $child2->setParent($parent);
+    expect($child2->previousSibling()->id())->toEqual($child->id());
+});
 
-    public function testGetChildren()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child->setParent($parent);
-        $child2->setParent($parent);
-        $this->assertEquals($child->id(), $parent->getChildren()[0]->id());
-    }
+test('previous sibling not found', function (): void {
+    $parent = new MockNode();
+    $node = new MockNode();
+    $node->setParent($parent);
+    $node->previousSibling();
+})->throws(ChildNotFoundException::class);
 
-    public function testCountChildren()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child->setParent($parent);
-        $child2->setParent($parent);
-        $this->assertEquals(2, $parent->countChildren());
-    }
+test('previous sibling no parent', function (): void {
+    $child = new MockNode();
+    $child->previousSibling();
+})->throws(ParentNotFoundException::class);
 
-    public function testIsChild()
-    {
-        $parent = new Node();
-        $child1 = new Node();
-        $child2 = new Node();
+test('get children', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child->setParent($parent);
+    $child2->setParent($parent);
+    expect($parent->getChildren()[0]->id())->toEqual($child->id());
+});
 
-        $child1->setParent($parent);
-        $child2->setParent($child1);
+test('count children', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child->setParent($parent);
+    $child2->setParent($parent);
+    expect($parent->countChildren())->toEqual(2);
+});
 
-        $this->assertTrue($parent->isChild($child1->id()));
-        $this->assertTrue($parent->isDescendant($child2->id()));
-        $this->assertFalse($parent->isChild($child2->id()));
-    }
-}
+test('is child', function (): void {
+    $parent = new MockNode();
+    $child1 = new MockNode();
+    $child2 = new MockNode();
+
+    $child1->setParent($parent);
+    $child2->setParent($child1);
+
+    expect($parent->isChild($child1->id()))->toBeTrue();
+    expect($parent->isDescendant($child2->id()))->toBeTrue();
+    expect($parent->isChild($child2->id()))->toBeFalse();
+});

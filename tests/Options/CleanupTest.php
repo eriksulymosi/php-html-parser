@@ -1,83 +1,74 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Options;
-use PHPUnit\Framework\TestCase;
 
-class CleanupTest extends TestCase
-{
-    public function testCleanupInputTrue()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setCleanupInput(true));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(0, \count($dom->find('style')));
-        $this->assertEquals(0, \count($dom->find('script')));
-    }
+test('cleanup input true', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setCleanupInput(true));
+    $dom->loadFromFile('tests/data/files/big.html');
 
-    public function testCleanupInputFalse()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setCleanupInput(false));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(1, \count($dom->find('style')));
-        $this->assertEquals(22, \count($dom->find('script')));
-    }
+    expect(\count($dom->find('style')))->toEqual(0);
+    expect(\count($dom->find('script')))->toEqual(0);
+});
 
-    public function testRemoveStylesTrue()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setRemoveStyles(true));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(0, \count($dom->find('style')));
-    }
+test('cleanup input false', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setCleanupInput(false));
+    $dom->loadFromFile('tests/data/files/big.html');
 
-    public function testRemoveStylesFalse()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setRemoveStyles(false));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(1, \count($dom->find('style')));
-        $this->assertEquals('text/css',
-            $dom->find('style')->getAttribute('type'));
-    }
+    expect(\count($dom->find('style')))->toEqual(1);
+    expect(\count($dom->find('script')))->toEqual(22);
+});
 
-    public function testRemoveScriptsTrue()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setRemoveScripts(true));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(0, \count($dom->find('script')));
-    }
+test('remove styles true', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setRemoveStyles(true));
+    $dom->loadFromFile('tests/data/files/big.html');
 
-    public function testRemoveScriptsFalse()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setRemoveScripts(false));
-        $dom->loadFromFile('tests/data/files/big.html');
-        $this->assertEquals(22, \count($dom->find('script')));
-        $this->assertEquals('text/javascript',
-            $dom->find('script')->getAttribute('type'));
-    }
+    expect(\count($dom->find('style')))->toEqual(0);
+});
 
-    public function testSmartyScripts()
-    {
-        $dom = new Dom();
-        $dom->loadStr('
+test('remove styles false', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setRemoveStyles(false));
+    $dom->loadFromFile('tests/data/files/big.html');
+
+    expect(\count($dom->find('style')))->toEqual(1);
+    expect($dom->find('style')->getAttribute('type'))->toEqual('text/css');
+});
+
+test('remove scripts true', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setRemoveScripts(true));
+    $dom->loadFromFile('tests/data/files/big.html');
+
+    expect(\count($dom->find('script')))->toEqual(0);
+});
+
+test('remove scripts false', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setRemoveScripts(false));
+    $dom->loadFromFile('tests/data/files/big.html');
+
+    expect(\count($dom->find('script')))->toEqual(22);
+    expect($dom->find('script')->getAttribute('type'))->toEqual('text/javascript');
+});
+
+test('smarty scripts', function (): void {
+    $dom = new Dom();
+    $dom->loadStr('
         aa={123}
         ');
-        $this->assertEquals(' aa= ', $dom->innerHtml);
-    }
+    expect($dom->innerHtml)->toEqual(' aa= ');
+});
 
-    public function testSmartyScriptsDisabled()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setRemoveSmartyScripts(false));
-        $dom->loadStr('
+test('smarty scripts disabled', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setRemoveSmartyScripts(false));
+    $dom->loadStr('
         aa={123}
         ');
-        $this->assertEquals(' aa={123} ', $dom->innerHtml);
-    }
-}
+    expect($dom->innerHtml)->toEqual(' aa={123} ');
+});

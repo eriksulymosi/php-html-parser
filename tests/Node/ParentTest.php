@@ -1,315 +1,280 @@
 <?php
 
-declare(strict_types=1);
 require_once 'tests/data/MockNode.php';
 
-use PHPHtmlParser\Dom\Node\MockNode as Node;
-use PHPUnit\Framework\TestCase;
+use PHPHtmlParser\Dom\Node\MockNode;
+use PHPHtmlParser\Exceptions\ChildNotFoundException;
+use PHPHtmlParser\Exceptions\CircularException;
 
-class NodeParentTest extends TestCase
-{
-    public function testHasChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $this->assertTrue($parent->hasChildren());
-    }
+test('has child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    expect($parent->hasChildren())->toBeTrue();
+});
 
-    public function testHasChildNoChildren()
-    {
-        $node = new Node();
-        $this->assertFalse($node->hasChildren());
-    }
+test('has child no children', function (): void {
+    $node = new MockNode();
+    expect($node->hasChildren())->toBeFalse();
+});
 
-    public function testAddChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $this->assertTrue($parent->addChild($child));
-    }
+test('add child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    expect($parent->addChild($child))->toBeTrue();
+});
 
-    public function testAddChildTwoParent()
-    {
-        $parent = new Node();
-        $parent2 = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $parent2->addChild($child);
-        $this->assertFalse($parent->hasChildren());
-    }
+test('add child two parent', function (): void {
+    $parent = new MockNode();
+    $parent2 = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    $parent2->addChild($child);
+    expect($parent->hasChildren())->toBeFalse();
+});
 
-    public function testGetChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $this->assertTrue($parent->getChild($child2->id()) instanceof Node);
-    }
+test('get child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
 
-    public function testRemoveChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $parent->removeChild($child->id());
-        $this->assertFalse($parent->hasChildren());
-    }
+    expect($parent->getChild($child2->id()) instanceof MockNode)->toBeTrue();
+});
 
-    public function testRemoveChildNotExists()
-    {
-        $parent = new Node();
-        $parent->removeChild(1);
-        $this->assertFalse($parent->hasChildren());
-    }
+test('remove child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    $parent->removeChild($child->id());
 
-    public function testNextChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
+    expect($parent->hasChildren())->toBeFalse();
+});
 
-        $this->assertEquals($child2->id(), $parent->nextChild($child->id())->id());
-    }
+test('remove child not exists', function (): void {
+    $parent = new MockNode();
+    $parent->removeChild(1);
 
-    public function testHasNextChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
+    expect($parent->hasChildren())->toBeFalse();
+});
 
-        $this->assertEquals($child2->id(), $parent->hasNextChild($child->id()));
-    }
+test('next child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
 
-    public function testHasNextChildNotExists()
-    {
-        $parent = new Node();
-        $child = new Node();
+    expect($parent->nextChild($child->id())->id())->toEqual($child2->id());
+});
 
-        $this->expectException(\PHPHtmlParser\Exceptions\ChildNotFoundException::class);
-        $parent->hasNextChild($child->id());
-    }
+test('has next child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
 
-    public function testNextChildWithRemove()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $parent->addChild($child3);
+    expect($parent->hasNextChild($child->id()))->toEqual($child2->id());
+});
 
-        $parent->removeChild($child2->id());
-        $this->assertEquals($child3->id(), $parent->nextChild($child->id())->id());
-    }
+test('has next child not exists', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
 
-    public function testPreviousChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
+    $parent->hasNextChild($child->id());
+})->throws(ChildNotFoundException::class);
 
-        $this->assertEquals($child->id(), $parent->previousChild($child2->id())->id());
-    }
+test('next child with remove', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
+    $parent->addChild($child3);
 
-    public function testPreviousChildWithRemove()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $parent->addChild($child3);
+    $parent->removeChild($child2->id());
 
-        $parent->removeChild($child2->id());
-        $this->assertEquals($child->id(), $parent->previousChild($child3->id())->id());
-    }
+    expect($parent->nextChild($child->id())->id())->toEqual($child3->id());
+});
 
-    public function testFirstChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $parent->addChild($child3);
+test('previous child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
 
-        $this->assertEquals($child->id(), $parent->firstChild()->id());
-    }
+    expect($parent->previousChild($child2->id())->id())->toEqual($child->id());
+});
 
-    public function testLastChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $parent->addChild($child3);
+test('previous child with remove', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
+    $parent->addChild($child3);
 
-        $this->assertEquals($child3->id(), $parent->lastChild()->id());
-    }
+    $parent->removeChild($child2->id());
 
-    public function testInsertBeforeFirst()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child2);
-        $parent->addChild($child3);
+    expect($parent->previousChild($child3->id())->id())->toEqual($child->id());
+});
 
-        $parent->insertBefore($child, $child2->id());
+test('first child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
+    $parent->addChild($child3);
 
-        $this->assertTrue($parent->isChild($child->id()));
-        $this->assertEquals($parent->firstChild()->id(), $child->id());
-        $this->assertEquals($child->nextSibling()->id(), $child2->id());
-        $this->assertEquals($child2->nextSibling()->id(), $child3->id());
-        $this->assertEquals($parent->lastChild()->id(), $child3->id());
-    }
+    expect($parent->firstChild()->id())->toEqual($child->id());
+});
 
-    public function testInsertBeforeLast()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child3);
+test('last child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
+    $parent->addChild($child3);
 
-        $parent->insertBefore($child2, $child3->id());
+    expect($parent->lastChild()->id())->toEqual($child3->id());
+});
 
-        $this->assertTrue($parent->isChild($child2->id()));
-        $this->assertEquals($parent->firstChild()->id(), $child->id());
-        $this->assertEquals($child->nextSibling()->id(), $child2->id());
-        $this->assertEquals($child2->nextSibling()->id(), $child3->id());
-        $this->assertEquals($parent->lastChild()->id(), $child3->id());
-    }
+test('insert before first', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child2);
+    $parent->addChild($child3);
 
-    public function testInsertAfterFirst()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child3);
+    $parent->insertBefore($child, $child2->id());
 
-        $parent->insertAfter($child2, $child->id());
+    expect($parent->isChild($child->id()))->toBeTrue();
+    expect($child->id())->toEqual($parent->firstChild()->id());
+    expect($child2->id())->toEqual($child->nextSibling()->id());
+    expect($child3->id())->toEqual($child2->nextSibling()->id());
+    expect($child3->id())->toEqual($parent->lastChild()->id());
+});
 
-        $this->assertTrue($parent->isChild($child2->id()));
-        $this->assertEquals($parent->firstChild()->id(), $child->id());
-        $this->assertEquals($child->nextSibling()->id(), $child2->id());
-        $this->assertEquals($child2->nextSibling()->id(), $child3->id());
-        $this->assertEquals($parent->lastChild()->id(), $child3->id());
-    }
+test('insert before last', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child3);
 
-    public function testInsertAfterLast()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
+    $parent->insertBefore($child2, $child3->id());
 
-        $parent->insertAfter($child3, $child2->id());
+    expect($parent->isChild($child2->id()))->toBeTrue();
+    expect($child->id())->toEqual($parent->firstChild()->id());
+    expect($child2->id())->toEqual($child->nextSibling()->id());
+    expect($child3->id())->toEqual($child2->nextSibling()->id());
+    expect($child3->id())->toEqual($parent->lastChild()->id());
+});
 
-        $this->assertTrue($parent->isChild($child2->id()));
-        $this->assertEquals($parent->firstChild()->id(), $child->id());
-        $this->assertEquals($child->nextSibling()->id(), $child2->id());
-        $this->assertEquals($child2->nextSibling()->id(), $child3->id());
-        $this->assertEquals($parent->lastChild()->id(), $child3->id());
-    }
+test('insert after first', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child3);
 
-    public function testReplaceChild()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $child3 = new Node();
-        $parent->addChild($child);
-        $parent->addChild($child2);
-        $parent->replaceChild($child->id(), $child3);
+    $parent->insertAfter($child2, $child->id());
 
-        $this->assertFalse($parent->isChild($child->id()));
-    }
+    expect($parent->isChild($child2->id()))->toBeTrue();
+    expect($child->id())->toEqual($parent->firstChild()->id());
+    expect($child2->id())->toEqual($child->nextSibling()->id());
+    expect($child3->id())->toEqual($child2->nextSibling()->id());
+    expect($child3->id())->toEqual($parent->lastChild()->id());
+});
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\CircularException
-     */
-    public function testSetParentDescendantException()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $parent->setParent($child);
-    }
+test('insert after last', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\CircularException
-     */
-    public function testAddChildAncestorException()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $child->addChild($parent);
-    }
+    $parent->insertAfter($child3, $child2->id());
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\CircularException
-     */
-    public function testAddItselfAsChild()
-    {
-        $parent = new Node();
-        $parent->addChild($parent);
-    }
+    expect($parent->isChild($child2->id()))->toBeTrue();
+    expect($child->id())->toEqual($parent->firstChild()->id());
+    expect($child2->id())->toEqual($child->nextSibling()->id());
+    expect($child3->id())->toEqual($child2->nextSibling()->id());
+    expect($child3->id())->toEqual($parent->lastChild()->id());
+});
 
-    public function testIsAncestorParent()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $this->assertTrue($child->isAncestor($parent->id()));
-    }
+test('replace child', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $child3 = new MockNode();
+    $parent->addChild($child);
+    $parent->addChild($child2);
+    $parent->replaceChild($child->id(), $child3);
 
-    public function testGetAncestor()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $parent->addChild($child);
-        $ancestor = $child->getAncestor($parent->id());
-        $this->assertEquals($parent->id(), $ancestor->id());
-    }
+    expect($parent->isChild($child->id()))->toBeFalse();
+});
 
-    public function testGetGreatAncestor()
-    {
-        $parent = new Node();
-        $child = new Node();
-        $child2 = new Node();
-        $parent->addChild($child);
-        $child->addChild($child2);
-        $ancestor = $child2->getAncestor($parent->id());
-        $this->assertNotNull($ancestor);
-        $this->assertEquals($parent->id(), $ancestor->id());
-    }
+test('set parent descendant exception', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    $parent->setParent($child);
+})->throws(CircularException::class);
 
-    public function testGetAncestorNotFound()
-    {
-        $parent = new Node();
-        $ancestor = $parent->getAncestor(1);
-        $this->assertNull($ancestor);
-    }
-}
+test('add child ancestor exception', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    $child->addChild($parent);
+})->throws(CircularException::class);
+
+test('add itself as child', function (): void {
+    $parent = new MockNode();
+    $parent->addChild($parent);
+})->throws(CircularException::class);
+
+test('is ancestor parent', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    expect($child->isAncestor($parent->id()))->toBeTrue();
+});
+
+test('get ancestor', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $parent->addChild($child);
+    $ancestor = $child->getAncestor($parent->id());
+    expect($ancestor->id())->toEqual($parent->id());
+});
+
+test('get great ancestor', function (): void {
+    $parent = new MockNode();
+    $child = new MockNode();
+    $child2 = new MockNode();
+    $parent->addChild($child);
+    $child->addChild($child2);
+    $ancestor = $child2->getAncestor($parent->id());
+    expect($ancestor)->not->toBeNull();
+    expect($ancestor->id())->toEqual($parent->id());
+});
+
+test('get ancestor not found', function (): void {
+    $parent = new MockNode();
+    $ancestor = $parent->getAncestor(1);
+    expect($ancestor)->toBeNull();
+});

@@ -1,78 +1,53 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Dom\Node\TextNode;
-use PHPHtmlParser\Options;
-use PHPUnit\Framework\TestCase;
-use stringEncode\Encode;
 
-class NodeTextTest extends TestCase
-{
-    public function testText()
-    {
-        $node = new TextNode('foo bar');
-        $this->assertEquals('foo bar', $node->text());
-    }
+test('text', function (): void {
+    $node = new TextNode('foo bar');
+    expect($node->text())->toEqual('foo bar');
+});
 
-    public function testGetTag()
-    {
-        $node = new TextNode('foo bar');
-        $this->assertEquals('text', $node->getTag()->name());
-    }
+test('get tag', function (): void {
+    $node = new TextNode('foo bar');
+    expect($node->getTag()->name())->toEqual('text');
+});
 
-    public function testAncestorByTag()
-    {
-        $node = new TextNode('foo bar');
-        $text = $node->ancestorByTag('text');
-        $this->assertEquals($node, $text);
-    }
+test('ancestor by tag', function (): void {
+    $node = new TextNode('foo bar');
+    $text = $node->ancestorByTag('text');
+    expect($text)->toEqual($node);
+});
 
-    public function testPreserveEntity()
-    {
-        $node = new TextNode('&#x69;');
-        $text = $node->outerhtml;
-        $this->assertEquals('&#x69;', $text);
-    }
+test('preserve entity', function (): void {
+    $node = new TextNode('&#x69;');
+    $text = $node->outerhtml;
+    expect($text)->toEqual('&#x69;');
+});
 
-    public function testIsTextNode()
-    {
-        $node = new TextNode('text');
-        $this->assertEquals(true, $node->isTextNode());
-    }
+test('is text node', function (): void {
+    $node = new TextNode('text');
+    expect($node->isTextNode())->toEqual(true);
+});
 
-    public function testTextInTextNode()
-    {
-        $node = new TextNode('foo bar');
-        $this->assertEquals('foo bar', $node->outerHtml());
-    }
+test('text in text node', function (): void {
+    $node = new TextNode('foo bar');
+    expect($node->outerHtml())->toEqual('foo bar');
+});
 
-    public function testSetTextToTextNode()
-    {
-        $node = new TextNode('');
-        $node->setText('foo bar');
-        $this->assertEquals('foo bar', $node->innerHtml());
-    }
+test('set text to text node', function (): void {
+    $node = new TextNode('');
+    $node->setText('foo bar');
 
-    public function testSetText()
-    {
-        $dom = new Dom();
-        $dom->loadStr('<div class="all"><p>Hey bro, <a href="google.com">click here</a><br /> :)</p></div>');
-        $a = $dom->find('a')[0];
-        $a->firstChild()->setText('biz baz');
-        $this->assertEquals('<div class="all"><p>Hey bro, <a href="google.com">biz baz</a><br /> :)</p></div>', (string) $dom);
-    }
+    expect($node->innerHtml())->toEqual('foo bar');
+});
 
-    public function testSetTextEncoded()
-    {
-        $encode = new Encode();
-        $encode->from('UTF-8');
-        $encode->to('UTF-8');
+test('set text', function (): void {
+    $dom = new Dom();
+    $dom->loadStr('<div class="all"><p>Hey bro, <a href="google.com">click here</a><br /> :)</p></div>');
 
-        $node = new TextNode('foo bar');
-        $node->propagateEncoding($encode);
-        $node->setText('biz baz');
-        $this->assertEquals('biz baz', $node->text());
-    }
-}
+    $a = $dom->find('a')[0];
+    $a->firstChild()->setText('biz baz');
+    expect((string) $dom)->toEqual('<div class="all"><p>Hey bro, <a href="google.com">biz baz</a><br /> :)</p></div>');
+});

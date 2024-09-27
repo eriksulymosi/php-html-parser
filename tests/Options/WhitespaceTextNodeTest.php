@@ -1,26 +1,21 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Dom;
 use PHPHtmlParser\Options;
-use PHPUnit\Framework\TestCase;
 
-class WhitespaceTextNodeTest extends TestCase
-{
-    public function testConfigGlobalNoWhitespaceTextNode()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setWhitespaceTextNode(false));
-        $dom->loadStr('<div><p id="hey">Hey you</p> <p id="ya">Ya you!</p></div>');
-        $this->assertEquals('Ya you!', $dom->getElementById('hey')->nextSibling()->text);
-    }
+test('config global no whitespace text node', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setWhitespaceTextNode(false));
+    $dom->loadStr('<div><p id="hey">Hey you</p> <p id="ya">Ya you!</p></div>');
 
-    public function testConfigLocalOverride()
-    {
-        $dom = new Dom();
-        $dom->setOptions((new Options())->setWhitespaceTextNode(false));
-        $dom->loadStr('<div><p id="hey">Hey you</p> <p id="ya">Ya you!</p></div>', (new Options())->setWhitespaceTextNode(true));
-        $this->assertEquals(' ', $dom->getElementById('hey')->nextSibling()->text);
-    }
-}
+    expect($dom->getElementById('hey')->nextSibling()->text)->toEqual('Ya you!');
+});
+
+test('config local override', function (): void {
+    $dom = new Dom();
+    $dom->setOptions((new Options())->setWhitespaceTextNode(false));
+    $dom->loadStr('<div><p id="hey">Hey you</p> <p id="ya">Ya you!</p></div>', (new Options())->setWhitespaceTextNode(true));
+
+    expect($dom->getElementById('hey')->nextSibling()->text)->toEqual(' ');
+});

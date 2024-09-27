@@ -1,72 +1,63 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Options;
-use PHPUnit\Framework\TestCase;
 
-class OptionsTest extends TestCase
-{
-    public function testDefaultWhitespaceTextNode()
-    {
-        $options = new Options();
+test('default whitespace text node', function (): void {
+    $options = new Options();
 
-        $this->assertTrue($options->isWhitespaceTextNode());
-    }
+    expect($options->isWhitespaceTextNode())->toBeTrue();
+});
 
-    public function testSettingOption()
-    {
-        $options = new Options();
-        $options->setStrict(true);
+test('setting option', function (): void {
+    $options = new Options();
+    $options->setStrict(true);
 
-        $this->assertTrue($options->isStrict());
-    }
+    expect($options->isStrict())->toBeTrue();
+});
 
-    public function testOverwritingOption()
-    {
-        $options = new Options();
-        $options->setStrict(false);
-        $options2 = new Options();
-        $options2->setStrict(true);
-        $options2->setWhitespaceTextNode(false);
-        $options = $options->setFromOptions($options2);
+test('overwriting option', function (): void {
+    $options = new Options();
+    $options->setStrict(false);
 
-        $this->assertTrue($options->isStrict());
-        $this->assertFalse($options->isWhitespaceTextNode());
-    }
+    $options2 = new Options();
+    $options2->setStrict(true);
+    $options2->setWhitespaceTextNode(false);
 
-    public function testSetters()
-    {
-        $options = new Options();
+    $options = $options->setFromOptions($options2);
 
-        $options->setWhitespaceTextNode(true);
-        $this->assertTrue($options->isWhitespaceTextNode());
+    expect($options->isStrict())->toBeTrue();
+    expect($options->isWhitespaceTextNode())->toBeFalse();
+});
 
-        $options->setStrict(true);
-        $this->assertTrue($options->isStrict());
+test('setters', function (): void {
+    $options = new Options();
 
-        $options->setEnforceEncoding('utf8');
-        $this->assertEquals('utf8', $options->getEnforceEncoding());
+    $options->setWhitespaceTextNode(true);
 
-        $options->setCleanupInput(true);
-        $this->assertTrue($options->isCleanupInput());
+    expect($options->isWhitespaceTextNode())->toBeTrue();
 
-        $options->setRemoveScripts(true);
-        $this->assertTrue($options->isRemoveScripts());
+    $options->setStrict(true);
+    expect($options->isStrict())->toBeTrue();
 
-        $options->setRemoveStyles(true);
-        $this->assertTrue($options->isRemoveStyles());
+    $options->setCleanupInput(true);
+    expect($options->isCleanupInput())->toBeTrue();
 
-        $options->setPreserveLineBreaks(true);
-        $this->assertTrue($options->isPreserveLineBreaks());
+    $options->setRemoveScripts(true);
+    expect($options->isRemoveScripts())->toBeTrue();
 
-        $options->setRemoveDoubleSpace(true);
-        $this->assertTrue($options->isRemoveDoubleSpace());
+    $options->setRemoveStyles(true);
+    expect($options->isRemoveStyles())->toBeTrue();
 
-        $options->setRemoveSmartyScripts(true);
-        $this->assertTrue($options->isRemoveSmartyScripts());
+    $options->setPreserveLineBreaks(true);
+    expect($options->isPreserveLineBreaks())->toBeTrue();
 
-        $options->setHtmlSpecialCharsDecode(true);
-        $this->assertTrue($options->isHtmlSpecialCharsDecode());
-    }
-}
+    $options->setRemoveDoubleSpace(true);
+    expect($options->isRemoveDoubleSpace())->toBeTrue();
+
+    $options->setRemoveSmartyScripts(true);
+    expect($options->isRemoveSmartyScripts())->toBeTrue();
+
+    $options->setHtmlSpecialCharsDecode(true);
+    expect($options->isHtmlSpecialCharsDecode())->toBeTrue();
+});

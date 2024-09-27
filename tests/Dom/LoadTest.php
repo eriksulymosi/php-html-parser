@@ -1,98 +1,73 @@
 <?php
 
-declare(strict_types=1);
-
 use PHPHtmlParser\Dom;
-use PHPUnit\Framework\TestCase;
 
-class LoadTest extends TestCase
-{
-    /**
-     * @var Dom
-     */
-    private $dom;
+beforeEach(function (): void {
+    $dom = new Dom();
+    $dom->loadStr('<div class="all"><br><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></br></div><br class="both" />');
+    $this->dom = $dom;
+});
 
-    public function setUp()
-    {
-        $dom = new Dom();
-        $dom->loadStr('<div class="all"><br><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></br></div><br class="both" />');
-        $this->dom = $dom;
-    }
+afterEach(function (): void {
+    Mockery::close();
+});
 
-    public function tearDown()
-    {
-        Mockery::close();
-    }
+test('load escape quotes', function (): void {
+    $a = $this->dom->find('a', 0);
+    expect($a->outerHtml)->toEqual('<a href="google.com" id="78" data-quote="\"">click here</a>');
+});
 
-    public function testLoadEscapeQuotes()
-    {
-        $a = $this->dom->find('a', 0);
-        $this->assertEquals('<a href="google.com" id="78" data-quote="\"">click here</a>', $a->outerHtml);
-    }
+test('load no closing tag', function (): void {
+    $p = $this->dom->find('p', 0);
+    expect($p->innerHtml)->toEqual('Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a>');
+});
 
-    public function testLoadNoClosingTag()
-    {
-        $p = $this->dom->find('p', 0);
-        $this->assertEquals('Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a>', $p->innerHtml);
-    }
+test('load closing tag on self closing', function (): void {
+    expect($this->dom->find('br'))->toHaveCount(2);
+});
 
-    public function testLoadClosingTagOnSelfClosing()
-    {
-        $this->assertCount(2, $this->dom->find('br'));
-    }
+test('incorrect access', function (): void {
+    $div = $this->dom->find('div', 0);
+    expect($div->foo)->toEqual(null);
+});
 
-    public function testIncorrectAccess()
-    {
-        $div = $this->dom->find('div', 0);
-        $this->assertEquals(null, $div->foo);
-    }
+test('load attribute on self closing', function (): void {
+    $br = $this->dom->find('br', 1);
+    expect($br->getAttribute('class'))->toEqual('both');
+});
 
-    public function testLoadAttributeOnSelfClosing()
-    {
-        $br = $this->dom->find('br', 1);
-        $this->assertEquals('both', $br->getAttribute('class'));
-    }
+test('to string magic', function (): void {
+    expect((string) $this->dom)->toEqual('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div><br class="both" />');
+});
 
-    public function testToStringMagic()
-    {
-        $this->assertEquals('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div><br class="both" />', (string) $this->dom);
-    }
+test('get magic', function (): void {
+    expect($this->dom->innerHtml)->toEqual('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div><br class="both" />');
+});
 
-    public function testGetMagic()
-    {
-        $this->assertEquals('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div><br class="both" />', $this->dom->innerHtml);
-    }
+test('first child', function (): void {
+    expect($this->dom->firstChild()->outerHtml)->toEqual('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div>');
+});
 
-    public function testFirstChild()
-    {
-        $this->assertEquals('<div class="all"><br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p></div>', $this->dom->firstChild()->outerHtml);
-    }
+test('last child', function (): void {
+    expect($this->dom->lastChild()->outerHtml)->toEqual('<br class="both" />');
+});
 
-    public function testLastChild()
-    {
-        $this->assertEquals('<br class="both" />', $this->dom->lastChild()->outerHtml);
-    }
+test('get element by id', function (): void {
+    expect($this->dom->getElementById('78')->outerHtml)->toEqual('<a href="google.com" id="78" data-quote="\"">click here</a>');
+});
 
-    public function testGetElementById()
-    {
-        $this->assertEquals('<a href="google.com" id="78" data-quote="\"">click here</a>', $this->dom->getElementById('78')->outerHtml);
-    }
+test('get elements by tag', function (): void {
+    expect($this->dom->getElementsByTag('p')[0]->outerHtml)->toEqual('<p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p>');
+});
 
-    public function testGetElementsByTag()
-    {
-        $this->assertEquals('<p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p>', $this->dom->getElementsByTag('p')[0]->outerHtml);
-    }
+test('get elements by class', function (): void {
+    expect($this->dom->getElementsByClass('all')[0]->innerHtml)->toEqual('<br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p>');
+});
 
-    public function testGetElementsByClass()
-    {
-        $this->assertEquals('<br /><p>Hey bro, <a href="google.com" id="78" data-quote="\"">click here</a></p>', $this->dom->getElementsByClass('all')[0]->innerHtml);
-    }
+test('delete node', function (): void {
+    $a = $this->dom->find('a')[0];
+    $a->delete();
+    unset($a);
 
-    public function testDeleteNode()
-    {
-        $a = $this->dom->find('a')[0];
-        $a->delete();
-        unset($a);
-        $this->assertEquals('<div class="all"><br /><p>Hey bro, </p></div><br class="both" />', (string) $this->dom);
-    }
-}
+    expect((string) $this->dom)->toEqual('<div class="all"><br /><p>Hey bro, </p></div><br class="both" />');
+});

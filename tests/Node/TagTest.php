@@ -1,194 +1,182 @@
 <?php
 
-declare(strict_types=1);
 
 use PHPHtmlParser\Dom\Tag;
-use PHPUnit\Framework\TestCase;
+use PHPHtmlParser\Exceptions\Tag\AttributeNotFoundException;
 
-class NodeTagTest extends TestCase
-{
-    public function testSelfClosing()
-    {
-        $tag = new Tag('a');
-        $tag->selfClosing();
-        $this->assertTrue($tag->isSelfClosing());
-    }
+test('self closing', function (): void {
+    $tag = new Tag('a');
+    $tag->selfClosing();
 
-    public function testSetAttributes()
-    {
-        $attr = [
-            'href' => [
-                'value'       => 'http://google.com',
-                'doubleQuote' => false,
-            ],
-        ];
+    expect($tag->isSelfClosing())->toBeTrue();
+});
 
-        $tag = new Tag('a');
-        $tag->setAttributes($attr);
-        $this->assertEquals('http://google.com', $tag->getAttribute('href')->getValue());
-    }
+test('set attributes', function (): void {
+    $attr = [
+        'href' => [
+            'value'       => 'http://google.com',
+            'doubleQuote' => false,
+        ],
+    ];
 
-    /**
-     * @expectedException \PHPHtmlParser\Exceptions\Tag\AttributeNotFoundException
-     */
-    public function testRemoveAttribute()
-    {
-        $tag = new Tag('a');
-        $tag->setAttribute('href', 'http://google.com');
-        $tag->removeAttribute('href');
-        $tag->getAttribute('href');
-    }
+    $tag = new Tag('a');
+    $tag->setAttributes($attr);
 
-    public function testRemoveAllAttributes()
-    {
-        $tag = new Tag('a');
-        $tag->setAttribute('href', 'http://google.com');
-        $tag->setAttribute('class', 'clear-fix', true);
-        $tag->removeAllAttributes();
-        $this->assertEquals(0, \count($tag->getAttributes()));
-    }
+    expect($tag->getAttribute('href')->value)->toEqual('http://google.com');
+});
 
-    public function testSetAttributeNoArray()
-    {
-        $tag = new Tag('a');
-        $tag->setAttribute('href', 'http://google.com');
-        $this->assertEquals('http://google.com', $tag->getAttribute('href')->getValue());
-    }
+test('remove attribute', function (): void {
+    $tag = new Tag('a');
+    $tag->setAttribute('href', 'http://google.com');
+    $tag->removeAttribute('href');
+    $tag->getAttribute('href');
+})->throws(AttributeNotFoundException::class);
 
-    public function testSetAttributesNoDoubleArray()
-    {
-        $attr = [
-            'href'  => 'http://google.com',
-            'class' => 'funtimes',
-        ];
+test('remove all attributes', function (): void {
+    $tag = new Tag('a');
+    $tag->setAttribute('href', 'http://google.com');
+    $tag->setAttribute('class', 'clear-fix', true);
+    $tag->removeAllAttributes();
 
-        $tag = new Tag('a');
-        $tag->setAttributes($attr);
-        $this->assertEquals('funtimes', $tag->getAttribute('class')->getValue());
-    }
+    expect(\count($tag->getAttributes()))->toEqual(0);
+});
 
-    public function testUpdateAttributes()
-    {
-        $tag = new Tag('a');
-        $tag->setAttributes([
-            'href' => [
-                'value'       => 'http://google.com',
-                'doubleQuote' => false,
-            ],
-            'class' => [
-                'value'       => null,
-                'doubleQuote' => true,
-            ],
-        ]);
+test('set attribute no array', function (): void {
+    $tag = new Tag('a');
+    $tag->setAttribute('href', 'http://google.com');
 
-        $this->assertEquals(null, $tag->getAttribute('class')->getValue());
-        $this->assertEquals('http://google.com', $tag->getAttribute('href')->getValue());
+    expect($tag->getAttribute('href')->value)->toEqual('http://google.com');
+});
 
-        $attr = [
-            'href'  => 'https://www.google.com',
-            'class' => 'funtimes',
-        ];
+test('set attributes no double array', function (): void {
+    $attr = [
+        'href'  => 'http://google.com',
+        'class' => 'funtimes',
+    ];
 
-        $tag->setAttributes($attr);
-        $this->assertEquals('funtimes', $tag->getAttribute('class')->getValue());
-        $this->assertEquals('https://www.google.com', $tag->getAttribute('href')->getValue());
-    }
+    $tag = new Tag('a');
+    $tag->setAttributes($attr);
 
-    public function testNoise()
-    {
-        $tag = new Tag('a');
-        $this->assertTrue($tag->noise('noise') instanceof Tag);
-    }
+    expect($tag->getAttribute('class')->value)->toEqual('funtimes');
+});
 
-    public function testGetAttributeMagic()
-    {
-        $attr = [
-            'href' => [
-                'value'       => 'http://google.com',
-                'doubleQuote' => false,
-            ],
-        ];
+test('update attributes', function (): void {
+    $tag = new Tag('a');
+    $tag->setAttributes([
+        'href' => [
+            'value'       => 'http://google.com',
+            'doubleQuote' => false,
+        ],
+        'class' => [
+            'value'       => null,
+            'doubleQuote' => true,
+        ],
+    ]);
 
-        $tag = new Tag('a');
-        $tag->setAttributes($attr);
-        $this->assertEquals('http://google.com', $tag->getAttribute('href')->getValue());
-    }
+    expect($tag->getAttribute('class')->value)->toEqual(null);
+    expect($tag->getAttribute('href')->value)->toEqual('http://google.com');
 
-    public function testSetAttributeMagic()
-    {
-        $tag = new Tag('a');
-        $tag->setAttribute('href', 'http://google.com');
-        $this->assertEquals('http://google.com', $tag->getAttribute('href')->getValue());
-    }
+    $attr = [
+        'href'  => 'https://www.google.com',
+        'class' => 'funtimes',
+    ];
 
-    public function testMakeOpeningTag()
-    {
-        $attr = [
-            'href' => [
-                'value'       => 'http://google.com',
-                'doubleQuote' => true,
-            ],
-        ];
+    $tag->setAttributes($attr);
+    expect($tag->getAttribute('class')->value)->toEqual('funtimes');
+    expect($tag->getAttribute('href')->value)->toEqual('https://www.google.com');
+});
 
-        $tag = new Tag('a');
-        $tag->setAttributes($attr);
-        $this->assertEquals('<a href="http://google.com">', $tag->makeOpeningTag());
-    }
+test('noise', function (): void {
+    $tag = new Tag('a');
+    expect($tag->noise('noise') instanceof Tag)->toBeTrue();
+});
 
-    public function testMakeOpeningTagEmptyAttr()
-    {
-        $attr = [
-            'href' => [
-                'value'       => 'http://google.com',
-                'doubleQuote' => true,
-            ],
-        ];
+test('get attribute magic', function (): void {
+    $attr = [
+        'href' => [
+            'value'       => 'http://google.com',
+            'doubleQuote' => false,
+        ],
+    ];
 
-        $tag = new Tag('a');
-        $tag->setAttributes($attr);
-        $tag->setAttribute('selected', null);
-        $this->assertEquals('<a href="http://google.com" selected>', $tag->makeOpeningTag());
-    }
+    $tag = new Tag('a');
+    $tag->setAttributes($attr);
 
-    public function testMakeOpeningTagSelfClosing()
-    {
-        $attr = [
-            'class' => [
-                'value'       => 'clear-fix',
-                'doubleQuote' => true,
-            ],
-        ];
+    expect($tag->getAttribute('href')->value)->toEqual('http://google.com');
+});
 
-        $tag = (new Tag('div'))
-            ->selfClosing()
-            ->setAttributes($attr);
-        $this->assertEquals('<div class="clear-fix" />', $tag->makeOpeningTag());
-    }
+test('set attribute magic', function (): void {
+    $tag = new Tag('a');
+    $tag->setAttribute('href', 'http://google.com');
 
-    public function testMakeClosingTag()
-    {
-        $tag = new Tag('a');
-        $this->assertEquals('</a>', $tag->makeClosingTag());
-    }
+    expect($tag->getAttribute('href')->value)->toEqual('http://google.com');
+});
 
-    public function testMakeClosingTagSelfClosing()
-    {
-        $tag = new Tag('div');
-        $tag->selfClosing();
-        $this->assertEmpty($tag->makeClosingTag());
-    }
+test('make opening tag', function (): void {
+    $attr = [
+        'href' => [
+            'value'       => 'http://google.com',
+            'doubleQuote' => true,
+        ],
+    ];
 
-    public function testSetTagAttribute()
-    {
-        $tag = new Tag('div');
-        $tag->setStyleAttributeValue('display', 'none');
-        $this->assertEquals('display:none;', $tag->getAttribute('style')->getValue());
-    }
+    $tag = new Tag('a');
+    $tag->setAttributes($attr);
 
-    public function testGetStyleAttributesArray()
-    {
-        $tag = new Tag('div');
-        $tag->setStyleAttributeValue('display', 'none');
-        $this->assertInternalType('array', $tag->getStyleAttributeArray());
-    }
-}
+    expect($tag->makeOpeningTag())->toEqual('<a href="http://google.com">');
+});
+
+test('make opening tag empty attr', function (): void {
+    $attr = [
+        'href' => [
+            'value'       => 'http://google.com',
+            'doubleQuote' => true,
+        ],
+    ];
+
+    $tag = new Tag('a');
+    $tag->setAttributes($attr);
+    $tag->setAttribute('selected', null);
+
+    expect($tag->makeOpeningTag())->toEqual('<a href="http://google.com" selected>');
+});
+
+test('make opening tag self closing', function (): void {
+    $attr = [
+        'class' => [
+            'value'       => 'clear-fix',
+            'doubleQuote' => true,
+        ],
+    ];
+
+    $tag = (new Tag('div'))
+        ->selfClosing()
+        ->setAttributes($attr);
+    expect($tag->makeOpeningTag())->toEqual('<div class="clear-fix" />');
+});
+
+test('make closing tag', function (): void {
+    $tag = new Tag('a');
+    expect($tag->makeClosingTag())->toEqual('</a>');
+});
+
+test('make closing tag self closing', function (): void {
+    $tag = new Tag('div');
+    $tag->selfClosing();
+
+    expect($tag->makeClosingTag())->toBeEmpty();
+});
+
+test('set tag attribute', function (): void {
+    $tag = new Tag('div');
+    $tag->setStyleAttributeValue('display', 'none');
+
+    expect($tag->getAttribute('style')->value)->toEqual('display:none;');
+});
+
+test('get style attributes array', function (): void {
+    $tag = new Tag('div');
+    $tag->setStyleAttributeValue('display', 'none');
+    
+    expect($tag->getStyleAttributeArray())->toBeArray();
+});
